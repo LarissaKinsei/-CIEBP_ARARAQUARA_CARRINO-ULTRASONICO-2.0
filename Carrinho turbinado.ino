@@ -15,7 +15,7 @@ EasyUltrasonic ultrasonic;
 #define SetaDireitaFrente 4   //direita frente
 #define SetaDireitaTras 7     //direita tras
 #define SetaEsquerdaFrente 8  // esquerda frente
-#define SetaEsquerdaTras 2   // esquerda tras
+#define SetaEsquerdaTras 2    // esquerda tras
 // Definier pinos do buzzer - som
 #define Buzina 10  //Pino do buzzer */
 //Definier pinos Ultrassonicos
@@ -23,7 +23,10 @@ EasyUltrasonic ultrasonic;
 #define TRIG 13  // pino ultrassonico envia o sinal
 // Variaveis
 int velocidadeParametro = 83;  // velocidade parametro dos motores
-float distanciaCM = 0;         // Distancia em centimetros
+float distanciaCM = 0;
+int var1 = 1;
+int var2 = 1;
+// Distancia em centimetros
 unsigned long tempoAtual = 0;  // Tempo atual da função millis()
 // Inicialização do codigo
 void setup() {
@@ -43,19 +46,57 @@ void setup() {
   ultrasonic.attach(TRIG, ECHO);
   //Monitor Serial
   Serial.begin(9600);
+  randomSeed(analogRead(A0));
 }
 void loop() {
   //Calculo de distancia Ultrassonica
   distanciaCM = ultrasonic.getDistanceCM();
-  if (distanciaCM < 20) {
-    SetaAlerta(millis(), 4000, 400);
-    Buzzina(millis(), 4000, 400, 3200);
+  Serial.println(distanciaCM);
+  
+  int direcao = random(3);
+
+  if (distanciaCM > 200 && distanciaCM < 300 && var1 == 1) {
+    var1 == 2;
+    Tras(0);
+    //Buzzina(millis(), 2200, 400, 1200);
+    Frente(220, 220);
+
+  } else if (distanciaCM > 200 && distanciaCM < 300 && var1 == 2) {
+    var1 == 1;
+    Tras(0);
+    Frente(150, 150);
+    //Buzzina(millis(), 2200, 400, 1200);
+
+
+  } else if (distanciaCM > 150 && distanciaCM <= 200 && var2 == 1) {
+    var2 == 2;
+    Tras(0);
+    Frente(100, 125);
+    //Buzzina(millis(), 2200, 400, 1200);
+
+  } else if (distanciaCM > 150 && distanciaCM <= 200 && var2 == 2) {
+    var2 == 1;
+    Tras(0);
+    Frente(80, 80);
+
+  } else if (distanciaCM > 100 && distanciaCM <= 150) {
+    Tras(0);
+    Frente(70, 70);
+
+  } else if (distanciaCM < 100) {
+    Frente(0, 0);
+    Tras(255);
+
+  } else {
+    Tras(0);
+    Frente(255, 255);
+
   }
-  delay(15);
+  delay(300);
 }
-void Frente(int velocidade) {
-  analogWrite(MotorEsquerdoFrente, velocidade);
-  analogWrite(MotorDireitoFrente, velocidade);
+void Frente(int velocidadeMotorDireito, int velocidadeMotorEsquerdo) {
+  analogWrite(MotorEsquerdoFrente, velocidadeMotorEsquerdo);
+  analogWrite(MotorDireitoFrente, velocidadeMotorDireito);
 }
 void Tras(int velocidade) {
   analogWrite(MotorEsquerdoTras, velocidade);

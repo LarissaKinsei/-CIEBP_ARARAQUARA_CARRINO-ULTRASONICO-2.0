@@ -15,9 +15,9 @@ EasyUltrasonic ultrasonic;
 #define SetaDireitaFrente 4   //direita frente
 #define SetaDireitaTras 7     //direita tras
 #define SetaEsquerdaFrente 8  // esquerda frente
-#define SetaEsquerdaTras 10   // esquerda tras
+#define SetaEsquerdaTras 2   // esquerda tras
 // Definier pinos do buzzer - som
-#define Buzina 11  //Pino do buzzer */
+#define Buzina 10  //Pino do buzzer */
 //Definier pinos Ultrassonicos
 #define ECHO 12  // pino ultrassonico recebe o sinal
 #define TRIG 13  // pino ultrassonico envia o sinal
@@ -42,19 +42,16 @@ void setup() {
   // Pinos Sensor Ultrasonico
   ultrasonic.attach(TRIG, ECHO);
   //Monitor Serial
-  Serial.begin(115200);
+  Serial.begin(9600);
 }
 void loop() {
-  // Tempo interno do arduino, inicio do loop
-  tempoAtual = millis();
   //Calculo de distancia Ultrassonica
   distanciaCM = ultrasonic.getDistanceCM();
-
-  // Frente (100);
-  // Tras (100);
-
-  Serial.println(distanciaCM);
-  delay(50);
+  if (distanciaCM < 20) {
+    SetaAlerta(millis(), 4000, 400);
+    Buzzina(millis(), 4000, 400, 3200);
+  }
+  delay(15);
 }
 void Frente(int velocidade) {
   analogWrite(MotorEsquerdoFrente, velocidade);
@@ -64,12 +61,90 @@ void Tras(int velocidade) {
   analogWrite(MotorEsquerdoTras, velocidade);
   analogWrite(MotorDireitoTras, velocidade);
 }
-void Direta (int velocidadeMD, int velocidadeME) {
-  analogWrite (MotorDireitoTras, velocidadeMD);
-  analogWrite (MotorEsquerdoFrente, velocidadeME); 
+void Direta(int velocidadeMD, int velocidadeME) {
+  analogWrite(MotorDireitoTras, velocidadeMD);
+  analogWrite(MotorEsquerdoFrente, velocidadeME);
 }
-void Esquerda (int velocidadeMD, int velocidadeME) {
-  analogWrite (MotorDireitoFrente, velocidadeMD);
-  analogWrite (MotorEsquerdoTras, velocidadeME); 
+void Esquerda(int velocidadeMD, int velocidadeME) {
+  analogWrite(MotorDireitoFrente, velocidadeMD);
+  analogWrite(MotorEsquerdoTras, velocidadeME);
 }
-
+void SetaAlerta(unsigned long tempoInicialSeta, int tempoSeta, int velocidadeSeta) {
+  do {
+    unsigned long S = ((millis() / velocidadeSeta) % 2 == 0);
+    if (S) {
+      digitalWrite(SetaEsquerdaFrente, HIGH);
+      digitalWrite(SetaDireitaTras, HIGH);
+      digitalWrite(SetaEsquerdaTras, HIGH);
+      digitalWrite(SetaDireitaFrente, HIGH);
+    } else {
+      digitalWrite(SetaEsquerdaFrente, LOW);
+      digitalWrite(SetaEsquerdaTras, LOW);
+      digitalWrite(SetaDireitaTras, LOW);
+      digitalWrite(SetaDireitaFrente, LOW);
+    }
+    digitalWrite(SetaEsquerdaFrente, LOW);
+    digitalWrite(SetaEsquerdaTras, LOW);
+    digitalWrite(SetaDireitaTras, LOW);
+    digitalWrite(SetaDireitaFrente, LOW);
+  } while ((millis() - tempoInicialSeta) < tempoSeta);
+}
+void SetaRe(unsigned long tempoInicialSeta, int tempoSeta, int velocidadeSeta) {
+  do {
+    unsigned long S = ((millis() / velocidadeSeta) % 2 == 0);
+    if (S) {
+      digitalWrite(SetaDireitaTras, HIGH);
+      digitalWrite(SetaEsquerdaTras, HIGH);
+    } else {
+      digitalWrite(SetaEsquerdaTras, LOW);
+      digitalWrite(SetaDireitaTras, LOW);
+    }
+    digitalWrite(SetaEsquerdaFrente, LOW);
+    digitalWrite(SetaEsquerdaTras, LOW);
+    digitalWrite(SetaDireitaTras, LOW);
+    digitalWrite(SetaDireitaFrente, LOW);
+  } while ((millis() - tempoInicialSeta) < tempoSeta);
+}
+void SetaDireita(unsigned long tempoInicialSeta, int tempoSeta, int velocidadeSeta) {
+  do {
+    unsigned long S = ((millis() / velocidadeSeta) % 2 == 0);
+    if (S) {
+      digitalWrite(SetaDireitaTras, HIGH);
+      digitalWrite(SetaDireitaFrente, HIGH);
+    } else {
+      digitalWrite(SetaDireitaTras, LOW);
+      digitalWrite(SetaDireitaFrente, LOW);
+    }
+    digitalWrite(SetaEsquerdaFrente, LOW);
+    digitalWrite(SetaEsquerdaTras, LOW);
+    digitalWrite(SetaDireitaTras, LOW);
+    digitalWrite(SetaDireitaFrente, LOW);
+  } while ((millis() - tempoInicialSeta) < tempoSeta);
+}
+void SetaEsquerda(unsigned long tempoInicialSeta, int tempoSeta, int velocidadeSeta) {
+  do {
+    unsigned long S = ((millis() / velocidadeSeta) % 2 == 0);
+    if (S) {
+      digitalWrite(SetaEsquerdaFrente, HIGH);
+      digitalWrite(SetaEsquerdaTras, HIGH);
+    } else {
+      digitalWrite(SetaEsquerdaFrente, LOW);
+      digitalWrite(SetaEsquerdaTras, LOW);
+    }
+    digitalWrite(SetaEsquerdaFrente, LOW);
+    digitalWrite(SetaEsquerdaTras, LOW);
+    digitalWrite(SetaDireitaTras, LOW);
+    digitalWrite(SetaDireitaFrente, LOW);
+  } while ((millis() - tempoInicialSeta) < tempoSeta);
+}
+void Buzzina(unsigned long tempoInicialBuzina, int tempoBuzina, int velocidadeBuzina, int somBuzina) {
+  do {
+    unsigned long B = ((millis() / velocidadeBuzina) % 2 == 0);
+    if (B) {
+      tone(Buzina, somBuzina);
+    } else {
+      noTone(Buzina);
+    }
+    noTone(Buzina);
+  } while ((millis() - tempoInicialBuzina) < tempoBuzina);
+}

@@ -22,14 +22,15 @@ EasyUltrasonic ultrasonic;
 #define ECHO 12  // pino ultrassonico recebe o sinal
 #define TRIG 13  // pino ultrassonico envia o sinal
 // Variaveis
-int velocidadeParametro = 255;  // velocidade parametro dos motores
+int velocidadeParametro = 180;  // velocidade parametro dos motores
 int velocidade1 = 0.75;
 int velocidade2 = 0.5;
 int velocidade3 = 0.35;
 float distanciaCM = 0;
 int var = 2;
+bool Interruptor;
 unsigned long currentTime = 0;
-unsigned long currentTime2 = 0;
+//unsigned long currentTime2 = 0;
 // Distancia em centimetros
 unsigned long tempoAtual = 0;  // Tempo atual da função millis()
 // Inicialização do codigo
@@ -56,21 +57,23 @@ void loop() {
   //Calculo de distancia Ultrassonica
   distanciaCM = ultrasonic.getDistanceCM();  //Biblioteca utilizada do arduino
   Serial.println(distanciaCM);
+  Serial.println(var);
 
   int direcao = random(2);
   //Casos 1: para o carrinho desviar dos obstaculos
   if (distanciaCM > 200 && distanciaCM < 300 && var % 2 == 0) {
     //Todo: se identificar um obstaculo a frente de 2m a 3m ele ira buzina 2x
     //Variavis pares
-    EstadoVariavel(5000);
+    EstadoVariavel(3000);
     Buzzina(millis(), 3000, 300, 3200);
+    Direcao(2, 255, 255);
 
     //Casos 2: para o carrinho desviar dos obstaculos
   } else if (distanciaCM > 200 && distanciaCM < 300 && var % 2 == 1) {
     //Todo: Se identificar um obstaculo a frente maior de 2m e menor de 3m ele ira buzinar e redizir a velocidade dos motores
     //Variaveis impares
 
-    EstadoVariavel(5000);
+    EstadoVariavel(3000);
 
     Buzzina(millis(), 3000, 300, 3200);
 
@@ -112,25 +115,18 @@ void loop() {
     }
 
     //Casos 5: para o carrinho desviar dos obstaculos
-  } else if (distanciaCM > 100 && distanciaCM <= 150) {
+  } else if ((distanciaCM <= 150) && (Interruptor == true)) {
     //Todo: Se identificar um obstaculo a frente  maior que 1m e menor que 1,5m ele ira para o carrinho, vai buzinar,
     //dar ré com o pisca alerta e buzina acionados, escolher um lado para virar sinalizando o lado escolhido e siga em frente
-    Direcao(4, 0, 0);
-    if (((millis() - currentTime2) > 500) && (millis() - currentTime) < 1000) {
-      Direcao(3, (velocidadeParametro * velocidade2), (velocidadeParametro * velocidade2));
-    } else if ((millis() - currentTime2) > 1000) {
-      if (direcao == 0) {
-        Direcao(0, (velocidadeParametro * velocidade3), (velocidadeParametro * velocidade2));
-      } else if (direcao == 1) {
-        Direcao(1, (velocidadeParametro * velocidade2), (velocidadeParametro * velocidade3));
-      }
-    }
+    Comando(millis(), direcao);
+    Interruptor = false; 
+
     /*/Casos 6: para o carrinho desviar dos obstaculos
   } else if (distanciaCM < 100) {
     //Todo: Se identificar um obstaculo a frente menor que 1m ele ira parar, dar ré, virar 180 graus e siguir em frente
   */} 
     else {
-      Direcao(2, 255, 255);
+      Direcao(2, velocidadeParametro, velocidadeParametro);
       // Função do carrinho para seguir sempre frente
     }
     delay(100);
@@ -273,5 +269,20 @@ void Direcao(int dir, int velocidadeMotorEsquerdo, int velocidadeMotorDireito) {
       analogWrite(MotorEsquerdoFrente, 0);
       analogWrite(MotorEsquerdoTras, 0);
       break;
+  }
+}
+void Comando(unsigned long currentTime2, int direcao) {
+
+  if ((((millis() - currentTime2) < 1000))) {
+    Direcao(4, 0, 0);
+    currentTime2 = millis(); 
+  } else if ((millis() - currentTime2) > 1000) {
+    if (direcao == 0) {
+      Direcao(0, (velocidadeParametro * velocidade3), (velocidadeParametro * velocidade2));
+      Interruptor = true;
+    } else if (direcao == 1) {
+      Direcao(1, (velocidadeParametro * velocidade2), (velocidadeParametro * velocidade3));
+      Interruptor = true;
+    }
   }
 }

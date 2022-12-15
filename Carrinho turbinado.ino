@@ -22,19 +22,26 @@ EasyUltrasonic ultrasonic;
 #define ECHO 12  // pino ultrassonico recebe o sinal
 #define TRIG 13  // pino ultrassonico envia o sinal
 // Variaveis
-int velocidadeParametro = 180;  // velocidade parametro dos motores
+int direcao = 0;
+int velocidadeParametro = 150;  // velocidade parametro dos motores
 int velocidade1 = 0.75;
 int velocidade2 = 0.5;
 int velocidade3 = 0.35;
+int gatilho;
 float distanciaCM = 0;
 int var = 2;
-bool Interruptor;
+bool interruptor = true;
+int c = 0;
 unsigned long currentTime = 0;
-//unsigned long currentTime2 = 0;
+unsigned long currentTime2 = 0;
+unsigned long currentTime3 = 0;
+unsigned long currentTime4 = 0;
+unsigned long currentTime5 = 0;
 // Distancia em centimetros
 unsigned long tempoAtual = 0;  // Tempo atual da função millis()
 // Inicialização do codigo
 void setup() {
+
   // Pinos motores
   pinMode(MotorEsquerdoFrente, OUTPUT);
   pinMode(MotorEsquerdoTras, OUTPUT);
@@ -56,101 +63,64 @@ void setup() {
 void loop() {
   //Calculo de distancia Ultrassonica
   distanciaCM = ultrasonic.getDistanceCM();  //Biblioteca utilizada do arduino
-  Serial.println(distanciaCM);
-  Serial.println(var);
+  DirecaoAtrasada();
 
-  int direcao = random(2);
   //Casos 1: para o carrinho desviar dos obstaculos
   if (distanciaCM > 200 && distanciaCM < 300 && var % 2 == 0) {
     //Todo: se identificar um obstaculo a frente de 2m a 3m ele ira buzina 2x
     //Variavis pares
-    EstadoVariavel(3000);
-    Buzzina(millis(), 3000, 300, 3200);
-    Direcao(2, 255, 255);
+
+    //EstadoVariavel(2000);
+    //Direcao(2, 160, 160);
 
     //Casos 2: para o carrinho desviar dos obstaculos
   } else if (distanciaCM > 200 && distanciaCM < 300 && var % 2 == 1) {
     //Todo: Se identificar um obstaculo a frente maior de 2m e menor de 3m ele ira buzinar e redizir a velocidade dos motores
     //Variaveis impares
 
-    EstadoVariavel(3000);
-
-    Buzzina(millis(), 3000, 300, 3200);
-
-    // Frente((velocidadeParametro * velocidade1), (velocidadeParametro * velocidade1));
-    Direcao(2, (velocidadeParametro * velocidade1), (velocidadeParametro * velocidade1));
+    //int v1 = velocidadeParametro * velocidade2;
+    // int v2 = velocidadeParametro * velocidade2;
+    // EstadoVariavel(3000);
+    //Direcao(2, 110, 110);
 
     //Casos 3: para o carrinho desviar dos obstaculos
-  } else if (distanciaCM > 150 && distanciaCM <= 200 && var % 2 == 0) {
-    //Todo: Se identificar um obstaculo a frente  maior que 1,5m e menor que 2m ele ira buzinar e acelerar um dos motores para mudar a direção
-    //Variavis pares
-
-    EstadoVariavel(5000);
-
-    Buzzina(millis(), 3000, 300, 3200);
-
-    //Frente((velocidadeParametro * velocidade1), (velocidadeParametro * velocidade1));
-
-    if (direcao == 0) {
-      Direcao(0, (velocidadeParametro * velocidade2), (velocidadeParametro * velocidade1));
-    } else if (direcao == 1) {
-      Direcao(1, (velocidadeParametro * velocidade1), (velocidadeParametro * velocidade2));
-    }
-
-    //Casos 4: para o carrinho desviar dos obstaculos
-  } else if (distanciaCM > 150 && distanciaCM <= 200 && var % 2 == 1) {
+  } else if (distanciaCM > 150 && distanciaCM <= 200) {
     //Todo: Se identificar um obstaculo a frente  maior que 1,5m e menor que 2m ele ira reduzir novamente a velocidade dos motores, buzinar e acelerar um dos motores para mudar a direção
     //Variaveis impares
+    EstadoVariavel(500);
+    Serial.println("caso 3");
 
-    EstadoVariavel(5000);
-
-    Buzzina(millis(), 3000, 300, 3200);
-
-    //Frente((velocidadeParametro * velocidade1), (velocidadeParametro * velocidade1));
-
-    if (direcao == 0) {
-      Direcao(0, (velocidadeParametro * velocidade3), (velocidadeParametro * velocidade2));
-    } else if (direcao == 1) {
-      Direcao(1, (velocidadeParametro * velocidade2), (velocidadeParametro * velocidade3));
-    }
-
-    //Casos 5: para o carrinho desviar dos obstaculos
-  } else if ((distanciaCM <= 150) && (Interruptor == true)) {
-    //Todo: Se identificar um obstaculo a frente  maior que 1m e menor que 1,5m ele ira para o carrinho, vai buzinar,
+    //Casos 4: para o carrinho desviar dos obstaculos
+  } else if ((distanciaCM <= 150)) {
+    //Todo: Se identificar um obstaculo a frente menor que 1,5m ele ira para o carrinho, vai buzinar,
     //dar ré com o pisca alerta e buzina acionados, escolher um lado para virar sinalizando o lado escolhido e siga em frente
-    Comando(millis(), direcao);
-    Interruptor = false; 
+    EstadoVariavel(500);
 
-    /*/Casos 6: para o carrinho desviar dos obstaculos
-  } else if (distanciaCM < 100) {
-    //Todo: Se identificar um obstaculo a frente menor que 1m ele ira parar, dar ré, virar 180 graus e siguir em frente
-  */} 
-    else {
-      Direcao(2, velocidadeParametro, velocidadeParametro);
-      // Função do carrinho para seguir sempre frente
+    SentidoAtrasado(direcao);
+
+    //Casos 6: para o carrinho desviar dos obstaculos
+  } else {
+    Direcao(2, 140, 140);
+  }
+}
+
+void SentidoAtrasado(int direcao) {
+  if (millis() - c > 5000) {
+    c = millis();
+    if (direcao == 0) {
+      Direita(0, 90);
+    } else if (direcao == 1) {
+      Esquerda(90, 0);
     }
-    delay(100);
+  }
 }
-/*/Função de controle da velocidade do carrinho para cada motor da frente
-void Frente(int velocidadeMotorDireito, int velocidadeMotorEsquerdo) {
-  analogWrite(MotorEsquerdoFrente, velocidadeMotorEsquerdo);
-  analogWrite(MotorDireitoFrente, velocidadeMotorDireito);
+//Função de escolha de direção com atraso
+void DirecaoAtrasada() {
+  if ((millis() - currentTime5 > 1500)) {
+    currentTime5 = millis();
+    direcao = random(2);
+  }
 }
-//Função de controle da velocidade do carrinho para cada motor de trás
-void Tras(int velocidade) {
-  analogWrite(MotorEsquerdoTras, velocidade);
-  analogWrite(MotorDireitoTras, velocidade);
-}
-//Função de controle da velocidade do carrinho para cada motor da direita
-void Direta(int velocidadeMD, int velocidadeME) {
-  analogWrite(MotorDireitoTras, velocidadeMD);
-  analogWrite(MotorEsquerdoFrente, velocidadeME);
-}
-//Função de controle da velocidade do carrinho para cada motor da esquerda
-void Esquerda(int velocidadeMD, int velocidadeME) {
-  analogWrite(MotorDireitoFrente, velocidadeMD);
-  analogWrite(MotorEsquerdoTras, velocidadeME);
-}*/
 //Função de controle da seta alerta do carrinho para piscar os 4 leds
 void SetaAlerta(unsigned long tempoInicialSeta, int tempoSeta, int velocidadeSeta) {
   do {
@@ -229,8 +199,10 @@ void Buzzina(unsigned long tempoInicialBuzina, int tempoBuzina, int velocidadeBu
     unsigned long B = ((millis() / velocidadeBuzina) % 2 == 0);
     if (B) {
       tone(Buzina, somBuzina);
+      digitalWrite(Buzina, HIGH);
     } else {
       noTone(Buzina);
+      digitalWrite(Buzina, LOW);
     }
     noTone(Buzina);
   } while ((millis() - tempoInicialBuzina) < tempoBuzina);
@@ -271,18 +243,11 @@ void Direcao(int dir, int velocidadeMotorEsquerdo, int velocidadeMotorDireito) {
       break;
   }
 }
-void Comando(unsigned long currentTime2, int direcao) {
-
-  if ((((millis() - currentTime2) < 1000))) {
-    Direcao(4, 0, 0);
-    currentTime2 = millis(); 
-  } else if ((millis() - currentTime2) > 1000) {
-    if (direcao == 0) {
-      Direcao(0, (velocidadeParametro * velocidade3), (velocidadeParametro * velocidade2));
-      Interruptor = true;
-    } else if (direcao == 1) {
-      Direcao(1, (velocidadeParametro * velocidade2), (velocidadeParametro * velocidade3));
-      Interruptor = true;
-    }
-  }
+void Esquerda(int velocidadeMotorEsquerdo, int velocidadeMotorDireito) {
+  analogWrite(MotorDireitoFrente, velocidadeMotorDireito);
+  analogWrite(MotorEsquerdoTras, velocidadeMotorEsquerdo);
+}
+void Direita(int velocidadeMotorEsquerdo, int velocidadeMotorDireito) {
+  analogWrite(MotorDireitoTras, velocidadeMotorDireito);
+  analogWrite(MotorEsquerdoFrente, velocidadeMotorEsquerdo);
 }
